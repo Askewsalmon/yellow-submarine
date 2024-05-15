@@ -8,68 +8,100 @@
 
   <body>
     <script type="module">
-      fetch("./submarines.json")
-        .then((response) => response.json())
-        .then((submarines) => {
-          console.log(submarines);
-        });
-      const width = 500;
-      const height = 500;
+      window.onload = () => {
+        const margin = { top: 10, right: 10, bottom: 40, left: 30 };
+        const width = window.innerWidth - margin.left - margin.right - 20;
+        const height = window.innerHeight - margin.top - margin.bottom;
 
-      const svg = d3
-        .select("body")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+        const svg = d3
+          .select("body")
+          .append("svg")
+          .attr("width", width + 30)
+          .attr("height", height + 30)
+          .append("g")
+          .attr("transform", `translate(${margin.left - 10}, ${margin.top})`);
 
-      const xAxis = d3.scaleLinear().domain([0, 10]).range([0, width]);
+        const xScale = d3.scaleLinear().domain([0, 10]).range([0, width]);
 
-      const yAxis = d3.scaleLinear().domain([0, 10]).range([height, 0]);
+        const yScale = d3.scaleLinear().domain([0, 10]).range([height, 0]);
 
-      svg
-        .append("g")
-        .attr("transform", `translate(0, ${height})`)
-        .call(d3.axisBottom(xAxis));
+        svg
+          .selectAll(".grid-line-vertical")
+          .data(xScale.ticks())
+          .enter()
+          .append("line")
+          .attr("class", "grid-line-vertical")
+          .attr("x1", (d) => xScale(d))
+          .attr("y1", 0)
+          .attr("x2", (d) => xScale(d))
+          .attr("y2", height)
+          .style("stroke", "lightgray")
+          .style("stroke-width", 1)
+          .style("stroke-dasharray", "4 4");
 
-      svg.append("g").call(d3.axisLeft(yAxis));
+        svg
+          .selectAll(".grid-line-horizontal")
+          .data(yScale.ticks())
+          .enter()
+          .append("line")
+          .attr("class", "grid-line-horizontal")
+          .attr("x1", 0)
+          .attr("y1", (d) => yScale(d))
+          .attr("x2", width)
+          .attr("y2", (d) => yScale(d))
+          .style("stroke", "lightgray")
+          .style("stroke-width", 1)
+          .style("stroke-dasharray", "4 4");
 
-      svg
-        .selectAll(".grid-line")
-        .data(xAxis.ticks())
-        .enter()
-        .append("line")
-        .attr("class", "grid-line")
-        .attr("x1", (d) => xAxis(d))
-        .attr("y1", 0)
-        .attr("x2", (d) => xAxis(d))
-        .attr("y2", height)
-        .style("stroke", "lightgray")
-        .style("stroke-width", 1)
-        .style("stroke-dasharray", "4 4");
+        svg
+          .append("g")
+          .attr("transform", `translate(0, ${height})`)
+          .call(d3.axisBottom(xScale));
 
-      svg
-        .selectAll(".grid-line")
-        .data(yAxis.ticks())
-        .enter()
-        .append("line")
-        .attr("class", "grid-line")
-        .attr("x1", 0)
-        .attr("y1", (d) => yAxis(d))
-        .attr("x2", width)
-        .attr("y2", (d) => yAxis(d))
-        .style("stroke", "lightgray")
-        .style("stroke-width", 1)
-        .style("stroke-dasharray", "4 4");
+        svg.append("g").call(d3.axisLeft(yScale));
 
-      svg
-        .selectAll("circle")
-        .data(data)
-        .enter()
-        .append("circle")
-        .attr("cx", (d) => xAxis(d.x))
-        .attr("cy", (d) => yAxis(d.y))
-        .attr("r", 5)
-        .attr("fill", "blue");
+        const submarineSvg = (
+          width,
+          height,
+          color
+        ) => `<svg viewBox="-42.12 -42.12 505.46 505.46" width="${width}px" height="${height}px" fill="${color}" transform="matrix(-1, 0, 0, 1, 0, 0)">
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#fa0000" stroke-width="4.21223">
+                </g>
+                <g id="SVGRepo_iconCarrier">
+                    <path style="stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;" d="M421.223,268.863h-8.711 c6.714-7.861,13.898-24.06,3.402-33.552c-11.418-10.324-13.867,4.764-11.576,16.02c1.371,6.744-0.166,13.332-0.433,17.532h-5.187 c-0.457-6.206-2.32-12.25-5.452-18.073l24.573-63.927h-26.139l-34.744,30.125c-27.324-15.776-66.153-27.337-110.836-32.149 c-3.049-9.807-13.155-17.933-26.701-22.031v-47.793c0-24.229-17.43-44.451-40.406-48.818c-1.464-3.706-5.07-6.333-9.297-6.333 c-5.522,0-10,4.477-10,10v40.5c0,5.522,4.478,10,10,10c4.485,0,8.281-2.953,9.549-7.022c0.095,0.545,0.154,1.102,0.154,1.673v47.793 c-12.969,3.924-22.779,11.542-26.266,20.791C28.989,190.672,0,227.493,0,271.863c0,49.43,35.951,89.498,199.42,89.498 c64.056,0,121.051-13.557,157.537-34.623l34.744,30.125h26.139l-24.573-63.927c3.132-5.823,4.995-11.867,5.452-18.073h5.187 c0.267,4.2,1.804,10.788,0.433,17.533c-2.291,11.255,0.158,26.344,11.576,16.02c10.496-9.493,3.311-25.691-3.404-33.553h8.713 V268.863z M99.42,293.529c-11.967,0-21.666-9.699-21.666-21.666s9.699-21.666,21.666-21.666s21.666,9.699,21.666,21.666 S111.387,293.529,99.42,293.529z M199.42,293.529c-11.967,0-21.666-9.699-21.666-21.666s9.699-21.666,21.666-21.666 c11.967,0,21.666,9.699,21.666,21.666S211.387,293.529,199.42,293.529z M299.42,293.529c-11.967,0-21.666-9.699-21.666-21.666 s9.699-21.666,21.666-21.666s21.666,9.699,21.666,21.666S311.387,293.529,299.42,293.529z"></path>
+                </g>
+                </svg>`;
+        fetch("./submarines.json")
+          .then((response) => response.json())
+          .then((submarines) => {
+            const xExtent = d3.extent(submarines, (d) => d.x);
+            const yExtent = d3.extent(submarines, (d) => d.y);
+
+            const maxWidth = d3.max(submarines, (d) => d.width);
+            const maxHeight = d3.max(submarines, (d) => d.height);
+
+            const xScale = d3
+              .scaleLinear()
+              .domain([xExtent[0], xExtent[1]])
+              .range([maxWidth / 2, width - maxWidth / 2]);
+            const yScale = d3
+              .scaleLinear()
+              .domain([yExtent[0], yExtent[1]])
+              .range([height - maxHeight / 2, maxHeight / 2]);
+
+            svg
+              .selectAll(".submarine")
+              .data(submarines)
+              .enter()
+              .append("foreignObject")
+              .attr("x", (d) => xScale(d.x) - d.width / 2)
+              .attr("y", (d) => yScale(d.y) - d.height / 2)
+              .attr("width", (d) => d.width)
+              .attr("height", (d) => d.height)
+              .html((d) => submarineSvg(d.width, d.height, d.color));
+          });
+      };
     </script>
   </body>
 </html>
