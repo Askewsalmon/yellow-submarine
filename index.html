@@ -6,12 +6,47 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
 
+  <style>
+    @keyframes wiggle {
+      0%,
+      7% {
+        transform: rotateX(0);
+      }
+      15% {
+        transform: rotateX(-15deg);
+      }
+      20% {
+        transform: rotateX(10deg);
+      }
+      25% {
+        transform: rotatex(-10deg);
+      }
+      30% {
+        transform: rotateX(6deg);
+      }
+      35% {
+        transform: rotateX(-4deg);
+      }
+      40%,
+      100% {
+        transform: rotateX(0);
+      }
+    }
+
+    .wiggle {
+      animation: wiggle 1s linear infinite;
+    }
+  </style>
+
   <body>
     <script type="module">
       window.onload = () => {
         const margin = { top: 10, right: 10, bottom: 40, left: 30 };
         const width = window.innerWidth - margin.left - margin.right - 20;
         const height = window.innerHeight - margin.top - margin.bottom;
+
+        let firstSubmarine = null;
+        let secondSubmarine = null;
 
         const svg = d3
           .select("body")
@@ -74,10 +109,10 @@
                 </svg>`;
         fetch("./submarines.json")
           .then((response) => response.json())
-          .then((submarines) => {
+          .then((data) => {
+            let submarines = data;
             const xExtent = d3.extent(submarines, (d) => d.x);
             const yExtent = d3.extent(submarines, (d) => d.y);
-
             const maxWidth = d3.max(submarines, (d) => d.width);
             const maxHeight = d3.max(submarines, (d) => d.height);
 
@@ -90,16 +125,77 @@
               .domain([yExtent[0], yExtent[1]])
               .range([height - maxHeight / 2, maxHeight / 2]);
 
-            svg
+            const graphicsSubmarines = svg
               .selectAll(".submarine")
-              .data(submarines)
+              .data(submarines);
+
+            graphicsSubmarines
               .enter()
               .append("foreignObject")
+              .attr("class", "submarine")
               .attr("x", (d) => xScale(d.x) - d.width / 2)
               .attr("y", (d) => yScale(d.y) - d.height / 2)
               .attr("width", (d) => d.width)
               .attr("height", (d) => d.height)
-              .html((d) => submarineSvg(d.width, d.height, d.color));
+              .html((d) => submarineSvg(d.width, d.height, d.color))
+              .on("click", (event, d) => {
+                if (!firstSubmarine) {
+                  firstSubmarine = d;
+                  d3.select(event.currentTarget).classed("wiggle", true);
+                } else if (firstSubmarine === d) {
+                  firstSubmarine = null;
+                  d3.select(event.currentTarget).classed("wiggle", false);
+                } else if (!secondSubmarine) {
+                  secondSubmarine = d;
+
+                  const temp = { ...firstSubmarine };
+                  firstSubmarine.y = secondSubmarine.y;
+                  firstSubmarine.width = secondSubmarine.width;
+                  firstSubmarine.height = secondSubmarine.height;
+                  firstSubmarine.color = secondSubmarine.color;
+
+                  secondSubmarine.y = temp.y;
+                  secondSubmarine.width = temp.width;
+                  secondSubmarine.height = temp.height;
+                  secondSubmarine.color = temp.color;
+
+                  console.log(submarines);
+                  updateSubmarines();
+                  d3.select(".wiggle").classed("wiggle", false);
+                  firstSubmarine = null;
+                  secondSubmarine = null;
+                }
+              });
+
+            function updateSubmarines() {
+              const graphicsSubmarines = svg
+                .selectAll(".submarine")
+                .data(submarines);
+
+              graphicsSubmarines.exit().remove();
+
+              graphicsSubmarines
+                .transition()
+                .duration(2000)
+                .attr("x", (d) => xScale(d.x) - d.width / 2)
+                .attr("y", (d) => yScale(d.y) - d.height / 2)
+                .attr("width", (d) => d.width)
+                .attr("height", (d) => d.height)
+                .select("svg")
+                .attr("width", (d) => d.width)
+                .attr("height", (d) => d.height)
+                .attr("fill", (d) => d.color);
+
+              graphicsSubmarines
+                .enter()
+                .append("foreignObject")
+                .attr("class", "submarine")
+                .attr("x", (d) => xScale(d.x) - d.width / 2)
+                .attr("y", (d) => yScale(d.y) - d.height / 2)
+                .attr("width", (d) => d.width)
+                .attr("height", (d) => d.height)
+                .html((d) => submarineSvg(d.width, d.height, d.color));
+            }
           });
       };
     </script>
