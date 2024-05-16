@@ -6,6 +6,38 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
 
+  <style>
+    @keyframes wiggle {
+      0%,
+      7% {
+        transform: rotateX(0);
+      }
+      15% {
+        transform: rotateX(-15deg);
+      }
+      20% {
+        transform: rotateX(10deg);
+      }
+      25% {
+        transform: rotatex(-10deg);
+      }
+      30% {
+        transform: rotateX(6deg);
+      }
+      35% {
+        transform: rotateX(-4deg);
+      }
+      40%,
+      100% {
+        transform: rotateX(0);
+      }
+    }
+
+    .wiggle {
+      animation: wiggle 1s linear infinite;
+    }
+  </style>
+
   <body>
     <script type="module">
       window.onload = () => {
@@ -109,6 +141,10 @@
               .on("click", (event, d) => {
                 if (!firstSubmarine) {
                   firstSubmarine = d;
+                  d3.select(event.currentTarget).classed("wiggle", true);
+                } else if (firstSubmarine === d) {
+                  firstSubmarine = null;
+                  d3.select(event.currentTarget).classed("wiggle", false);
                 } else if (!secondSubmarine) {
                   secondSubmarine = d;
 
@@ -125,6 +161,7 @@
 
                   console.log(submarines);
                   updateSubmarines();
+                  d3.select(".wiggle").classed("wiggle", false);
                   firstSubmarine = null;
                   secondSubmarine = null;
                 }
